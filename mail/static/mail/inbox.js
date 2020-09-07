@@ -26,36 +26,42 @@ function compose_email() {
 
 
 function load_mailbox(mailbox) {
-
+  let inner_html;
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
 
   // Show the mailbox name
    document.querySelector('#heading').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
-  let inbox_items = '' +
-      '<div class="table-responsive">' +
-      '            <table class="table">' +
-      '                <tbody>' +
-      '                </tbody>' +
-      '            </table>' +
-      '        </div>';
+
+   //Have to clean the inside first, otherewise the html will stay
+   document.getElementById("emails-preview").innerHTML = '';
+
   fetch(`/emails/${mailbox}`)
     .then(response => response.json())
     .then(data => {
-        alert(data)
       data.forEach(element => {
-        inbox_items += '                    <tr>' +
-      `                        <td class="name"><a href="#">${element["sender"]}</a></td>` +
-      `                        <td class="subject"><a href="#">${element["subject"]}</a></td>` +
-      `                        <td class="time">${element["timestamp"]}</td>` +
-      '                    </tr>';
-        console.log(inbox_items);
 
-        document.querySelector('#emails-preview').innerHTML = inbox_items;
+        // Creating the data cell
+        let inbox_item = document.createElement("tr");
 
+        // Filling it
+        inner_html =`<td class="name"><a href="{% url 'email' email_id=${element["id"]} %}">${element["sender"]}</a></td>` +
+        `            <td class="subject"><a href="{% url 'email' email_id=${element["id"]} %}">${element["subject"]}</a></td>` +
+        `            <td class="time">${element["timestamp"]}</td>`;
+
+        inbox_item.innerHTML = inner_html;
+
+        // coloring read emails
+        if(element.read){
+          inbox_item.style.backgroundColor = 'gray';
+        }
+
+        // appending it in the table in HTML
+        document.getElementById("emails-preview").innerHTML += inbox_item.innerHTML;
       })
     });
+  console.log(document.getElementById("emails-preview").innerHTML);
 
 }
 function send_email() {
@@ -79,6 +85,5 @@ function send_email() {
         console.log(result);
       });
   load_mailbox('sent');
-  alert('hello world');
 
 }
