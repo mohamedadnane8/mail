@@ -4,12 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
-
   // Send an email!
   document.querySelector('#send-email').addEventListener('click',() => send_email());
 
-  // By default, load the inbox
   load_mailbox('inbox')
+  // By default, load the inbox
 });
 
 function compose_email() {
@@ -26,15 +25,15 @@ function compose_email() {
 
 
 function load_mailbox(mailbox) {
-  let inner_html;
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-open').style.display = 'none';
 
   // Show the mailbox name
    document.querySelector('#heading').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
-   //Have to clean the inside first, otherewise the html will stay
+   //Have to clean the inside first, otherwise the html will stay
    document.getElementById("emails-preview").innerHTML = '';
 
   fetch(`/emails/${mailbox}`)
@@ -43,26 +42,67 @@ function load_mailbox(mailbox) {
       data.forEach(element => {
 
         // Creating the data cell
-        let inbox_item = document.createElement("tr");
-
+        const inbox_item = document.createElement("tr");
         // Filling it
-        inner_html =`<td class="name"><a href="{% url 'email' email_id=${element["id"]} %}">${element["sender"]}</a></td>` +
-        `            <td class="subject"><a href="{% url 'email' email_id=${element["id"]} %}">${element["subject"]}</a></td>` +
-        `            <td class="time">${element["timestamp"]}</td>`;
-
-        inbox_item.innerHTML = inner_html;
+        inbox_item.innerHTML = `<td class="name"><a href="#">${element["sender"]}</a></td>` +
+                  `            <td class="subject"><a href="#">${element["subject"]}</a></td>` +
+                  `            <td class="time"><a href="#">${element["timestamp"]}</a></td>`;
 
         // coloring read emails
         if(element.read){
-          inbox_item.style.backgroundColor = 'gray';
+          inbox_item.style.backgroundColor = "gray";
         }
+        inbox_item.querySelector("a").addEventListener('click', () => load_email(element.id));
+
 
         // appending it in the table in HTML
-        document.getElementById("emails-preview").innerHTML += inbox_item.innerHTML;
-      })
-    });
-  console.log(document.getElementById("emails-preview").innerHTML);
+        document.querySelector("#emails-preview").appendChild(inbox_item) ;
 
+      })
+
+
+
+    });
+
+}
+function load_email(id){
+  document.getElementById("emails-preview").style.display = 'none';
+  document.getElementById("compose-view").style.display = 'none';
+  document.querySelector('#email-open').style.display = 'block';
+
+  div_info = document.createElement("div");
+  div_info = document.createElement("div");
+  div_body = document.createElement("div");
+  div_info.className = "email-info";
+  button = document.createElement("button");
+  button.value = "reply";
+
+  fetch(`/emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+        // Print email
+
+
+      div_info.innerHTML =  `<p><b>From:</b> ${email.sender}</p>`+
+                            `<p><b>To:</b> ${email.recipients}</p>`+
+                            `<p><b>Subject:</b> ${email.subject}</p>`+
+                            `<p><b>Timestamp:</b> ${email.timestamp}</p>`+
+                            `<hr>`;
+      div_body.innerHTML = `<p>${email.body}</p>`;
+      document.getElementById("email-open").innerHTML += div_info.innerHTML;
+      document.getElementById("email-open").innerHTML += div_body.innerHTML;
+      document.getElementById("email-open").innerHTML += button;
+
+
+        // ... do something else with email ...
+    });
+
+    fetch(`/emails/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({
+        read: true
+    })
+  })
 }
 function send_email() {
   // Collect data
