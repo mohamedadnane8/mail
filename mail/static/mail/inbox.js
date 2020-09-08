@@ -14,8 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
 function compose_email() {
 
   // Show compose view and hide other views
-  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#emails-preview').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#email-open').style.display = 'none';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -26,7 +27,7 @@ function compose_email() {
 
 function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
-  document.querySelector('#emails-view').style.display = 'block';
+  document.querySelector('#emails-preview').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#email-open').style.display = 'none';
 
@@ -34,7 +35,7 @@ function load_mailbox(mailbox) {
    document.querySelector('#heading').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
 
    //Have to clean the inside first, otherwise the html will stay
-   document.getElementById("emails-preview").innerHTML = '';
+   document.querySelector("#emails-preview").innerHTML = '';
 
   fetch(`/emails/${mailbox}`)
     .then(response => response.json())
@@ -43,6 +44,7 @@ function load_mailbox(mailbox) {
 
         // Creating the data cell
         const inbox_item = document.createElement("tr");
+
         // Filling it
         inbox_item.innerHTML = `<td class="name"><a href="#">${element["sender"]}</a></td>` +
                   `            <td class="subject"><a href="#">${element["subject"]}</a></td>` +
@@ -50,7 +52,7 @@ function load_mailbox(mailbox) {
 
         // coloring read emails
         if(element.read){
-          inbox_item.style.backgroundColor = "gray";
+          inbox_item.style.backgroundColor = "#D3D3D3";
         }
         inbox_item.querySelector("a").addEventListener('click', () => load_email(element.id));
 
@@ -66,35 +68,52 @@ function load_mailbox(mailbox) {
 
 }
 function load_email(id){
-  document.getElementById("emails-preview").style.display = 'none';
-  document.getElementById("compose-view").style.display = 'none';
+  // Show only the email
+  document.querySelector("#emails-preview").style.display = 'none';
+  document.querySelector("#compose-view").style.display = 'none';
   document.querySelector('#email-open').style.display = 'block';
 
-  div_info = document.createElement("div");
-  div_info = document.createElement("div");
-  div_body = document.createElement("div");
+  // elements needed for the html code
+  const div_info = document.createElement("div");
+  const div_body = document.createElement("div");
+  const div_buttons = document.createElement("div");
   div_info.className = "email-info";
-  button = document.createElement("button");
-  button.value = "reply";
+
+  // emptying the email page first
+  document.querySelector("#email-open").innerHTML = '';
 
   fetch(`/emails/${id}`)
     .then(response => response.json())
     .then(email => {
-        // Print email
 
+      // .....Creating the html needed
 
+      // Archive and reply button
+      const archive = document.createElement("button");
+      archive.innerText = email.archived ? "Unarchive" : "Archive";
+      archive.className = "btn btn-sm btn-outline-primary archive";
+      const reply = document.createElement("button");
+      reply.innerText = "Reply";
+      reply.className = "btn btn-sm btn-outline-success reply";
+
+      // event listener for the buttons
+      archive.addEventListener('click',() => archive_email(email.id));
+      reply.addEventListener('click',() => reply(email.id));
+
+      // body and details html
       div_info.innerHTML =  `<p><b>From:</b> ${email.sender}</p>`+
                             `<p><b>To:</b> ${email.recipients}</p>`+
                             `<p><b>Subject:</b> ${email.subject}</p>`+
-                            `<p><b>Timestamp:</b> ${email.timestamp}</p>`+
-                            `<hr>`;
-      div_body.innerHTML = `<p>${email.body}</p>`;
-      document.getElementById("email-open").innerHTML += div_info.innerHTML;
-      document.getElementById("email-open").innerHTML += div_body.innerHTML;
-      document.getElementById("email-open").innerHTML += button;
+                            `<p><b>Timestamp:</b> ${email.timestamp}</p>`;
+      div_body.innerHTML = `<hr><p>${email.body}</p>`;
 
+      // adding it the content
+      div_buttons.appendChild(archive);
+      div_buttons.appendChild(reply);
+      document.querySelector("#email-open").appendChild(div_info);
+      document.querySelector("#email-open").appendChild(div_buttons);
+      document.querySelector("#email-open").appendChild(div_body);
 
-        // ... do something else with email ...
     });
 
     fetch(`/emails/${id}`, {
@@ -102,7 +121,36 @@ function load_email(id){
     body: JSON.stringify({
         read: true
     })
-  })
+  });
+}
+function archive_email(id){
+
+  // TODO: Optimize this code!
+  let archive = false;
+   fetch(`/emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+      archive = !(email.archived);
+      alert(archive);
+    });
+  if(archive) {
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        archived: true
+      })
+    });
+  }else{
+    fetch(`/emails/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        archived: false
+      })
+    });
+  }
+}
+function reply(id){
+
 }
 function send_email() {
   // Collect data
