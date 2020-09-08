@@ -54,7 +54,9 @@ function load_mailbox(mailbox) {
         if(element.read){
           inbox_item.style.backgroundColor = "#D3D3D3";
         }
-        inbox_item.querySelector("a").addEventListener('click', () => load_email(element.id));
+        inbox_item.querySelectorAll("a").forEach( a_item => {
+            a_item.addEventListener('click', () => load_email(element.id));
+        });
 
 
         // appending it in the table in HTML
@@ -139,7 +141,10 @@ function reply_email(id){
     .then(response => response.json())
     .then(email => {
         document.querySelector('#compose-recipients').value = email.sender;
-        document.querySelector('#compose-subject').value = "Re: "+ email.subject;
+        if(email.subject.startsWith("Re: "))
+            document.querySelector('#compose-subject').value = email.subject;
+        else
+            document.querySelector('#compose-subject').value = "Re: "+ email.subject;
         document.querySelector('#compose-body').value = 'On '+email.timestamp +email.sender+" wrote:\n"+email.body;
 
     });
