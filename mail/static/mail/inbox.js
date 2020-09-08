@@ -98,7 +98,7 @@ function load_email(id){
 
       // event listener for the buttons
       archive.addEventListener('click',() => archive_email(email.id));
-      reply.addEventListener('click',() => reply(email.id));
+      reply.addEventListener('click',() => rep(email.id));
 
       // body and details html
       div_info.innerHTML =  `<p><b>From:</b> ${email.sender}</p>`+
@@ -123,31 +123,15 @@ function load_email(id){
     })
   });
 }
-function archive_email(id){
+function archive_email(id,archive_status){
 
-  // TODO: Optimize this code!
-  let archive = false;
-   fetch(`/emails/${id}`)
-    .then(response => response.json())
-    .then(email => {
-      archive = !(email.archived);
-      alert(archive);
-    });
-  if(archive) {
     fetch(`/emails/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
-        archived: true
+        archived: ! (archive_status)
       })
     });
-  }else{
-    fetch(`/emails/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify({
-        archived: false
-      })
-    });
-  }
+    load_mailbox('inbox');
 }
 function reply(id){
 
