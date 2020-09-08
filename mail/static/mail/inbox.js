@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function compose_email() {
 
   // Show compose view and hide other views
-  document.querySelector('#emails-preview').style.display = 'none';
+  document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
   document.querySelector('#email-open').style.display = 'none';
 
@@ -27,7 +27,7 @@ function compose_email() {
 
 function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
-  document.querySelector('#emails-preview').style.display = 'block';
+  document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#email-open').style.display = 'none';
 
@@ -71,7 +71,7 @@ function load_mailbox(mailbox) {
 }
 function load_email(id){
   // Show only the email
-  document.querySelector("#emails-preview").style.display = 'none';
+  document.querySelector("#emails-view").style.display = 'none';
   document.querySelector("#compose-view").style.display = 'none';
   document.querySelector('#email-open').style.display = 'block';
 
@@ -127,6 +127,7 @@ function load_email(id){
 }
 function archive_email(id,archive_status){
 
+    // archiving unarchived
     fetch(`/emails/${id}`, {
       method: 'PUT',
       body: JSON.stringify({
@@ -140,6 +141,7 @@ function reply_email(id){
     fetch(`/emails/${id}`)
     .then(response => response.json())
     .then(email => {
+        // filling the form with the right info
         document.querySelector('#compose-recipients').value = email.sender;
         if(email.subject.startsWith("Re: "))
             document.querySelector('#compose-subject').value = email.subject;
