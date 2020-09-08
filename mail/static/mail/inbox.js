@@ -97,8 +97,8 @@ function load_email(id){
       reply.className = "btn btn-sm btn-outline-success reply";
 
       // event listener for the buttons
-      archive.addEventListener('click',() => archive_email(email.id));
-      reply.addEventListener('click',() => rep(email.id));
+      archive.addEventListener('click',() => archive_email(email.id,email.archived));
+      reply.addEventListener('click',() => reply_email(email.id));
 
       // body and details html
       div_info.innerHTML =  `<p><b>From:</b> ${email.sender}</p>`+
@@ -133,8 +133,16 @@ function archive_email(id,archive_status){
     });
     load_mailbox('inbox');
 }
-function reply(id){
+function reply_email(id){
+    compose_email();
+    fetch(`/emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+        document.querySelector('#compose-recipients').value = email.sender;
+        document.querySelector('#compose-subject').value = "Re: "+ email.subject;
+        document.querySelector('#compose-body').value = 'On '+email.timestamp +email.sender+" wrote:\n"+email.body;
 
+    });
 }
 function send_email() {
   // Collect data
